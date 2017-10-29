@@ -11,20 +11,26 @@ L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={
     accessToken: 'pk.eyJ1IjoidGFpc2VpIiwiYSI6ImNqOTY1MjZkNjAwdDczNGxmb2wxZ2p4anIifQ.GTOUmUftywRhBLnYsA8F2w'
 }).addTo(map);
 
-// Get position of client machine from IP
-var pos = L.GeoIP.getPosition();
+var popup = L.popup()
+    .setLatLng([44.044752, -123.081731])
+    .setContent("I am a standalone popup.")
+    .openOn(map);
 
-// Center map to position
-L.GeoIP.centerMapOnPosition(map, 12);
+var popup = L.popup();
 
-/*
-// Zoom map view to detected location
-map.locate({setView: true, maxZoom: 16});
+function onMapClick(e) {
+    var latlng = e.latlng
+    $.getJSON("/_get_addy", {lat: latlng.lat, lng: latlng.lng},
+        function(data) {
+            var address = data.result;
+            console.log("address json" + address.address);
+            popup
+                .setLatLng(e.latlng)
+                .setContent(address.address)
+                .openOn(map);
+        }
+    )
 
-// Alert when the location cannot be found
-function onLocationError(e) {
-    alert(e.message);
 }
 
-map.on('locationerror', onLocationError);
-*/
+map.on('click', onMapClick);
