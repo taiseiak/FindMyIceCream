@@ -1,5 +1,7 @@
 env/
 
+FindMyIceCream/credentials.ini
+
 # Created by .ignore support plugin (hsz.mobi)
 # Byte-compiled / optimized / DLL files
 __pycache__/
