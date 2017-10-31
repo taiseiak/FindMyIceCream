@@ -8,6 +8,7 @@ import config
 from flask import request
 import logging
 import geocoder
+import requests
 
 # Globals
 app = flask.Flask(__name__)
@@ -49,7 +50,19 @@ def error_403(e):
     return flask.render_template('403.html'), 403
 
 
-# Reverse Geocoding
+# Map setup
+@app.route("/_setup_map")
+def setup_map():
+    """
+    Sends map location and key information to set up map.
+    """
+    information = {"lat": float(CONFIG.DEFAULT_LAT),
+                   "lng": float(CONFIG.DEFAULT_LNG),
+                   "mapbox": CONFIG.MAPBOX}
+    return flask.jsonify(result=information)
+
+
+# Geocoding
 @app.route("/_get_addy")
 def get_addy():
     """
@@ -68,6 +81,29 @@ def get_addy():
     return flask.jsonify(result=g.json)
 
 
+@app.route("/_get_poi")
+def get_poi():
+    """
+    Gets the address of the points of interest specified
+    in the credentials file in a 10,000 meter radius.
+    """
+    lat = request.args.get('lat', type=float)
+    lng = request.args.get('lng', type=float)
+    url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json"
+    location = "{},{}".format(lat, lng)
+    params = {"key": CONFIG.GOOGLE_KEY,
+              "location": location,
+              "radius": CONFIG.RADIUS,
+              "keyword": CONFIG.FIND}
+    # Requests encodes the comma with percent so a work around for that problem
+    params_str = "&".join("{}={}".format(k, v) for k, v in params.items())
+    r = requests.get(url, params=params_str)
+    return flask.jsonify(r.json()['results'])
+
+
 if __name__ == "__main__":
     print("Opening for global access on port {}".format(CONFIG.PORT))
+    # http connection
     app.run(port=CONFIG.PORT, host="0.0.0.0")
+    # https connection. Comment line above and uncomment line below for https.
+    # app.run(port=CONFIG.PORT, host="0.0.0.0", ssl_context="adhoc")
